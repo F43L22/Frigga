@@ -1,0 +1,42 @@
+name: merge
+
+# Frigga is the only one who merges. When `vote-passed` is added, Frigga turns on
+# auto-merge; GitHub merges once `threads` and `frigga-vote` pass.
+# Runs from main's copy (pull_request_target) and never checks out PR code.
+
+on:
+  pull_request_target:
+    types: [labeled, unlabeled, synchronize]
+
+permissions: {}
+
+jobs:
+  frigga:
+    if: >-
+      github.event.action == 'synchronize' ||
+      github.event.label.name == 'vote-passed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Frigga's token
+        id: frigga
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.FRIGGA_APP_ID }}
+          private-key: ${{ secrets.FRIGGA_PRIVATE_KEY }}
+
+      - name: Merge, or stop merging
+        env:
+          GH_TOKEN: ${{ steps.frigga.outputs.token }}
+          PR: ${{ github.event.pull_request.number }}
+          ACTION: ${{ github.event.action }}
+        run: |
+          case "$ACTION" in
+            labeled)
+              gh pr merge "$PR" --repo "$GITHUB_REPOSITORY" --auto --merge ;;
+            unlabeled)
+              gh pr merge "$PR" --repo "$GITHUB_REPOSITORY" --disable-auto || true ;;
+            synchronize)
+              # New commits after a vote are not what was voted on: the vote starts over.
+              gh pr merge "$PR" --repo "$GITHUB_REPOSITORY" --disable-auto || true
+              gh pr edit "$PR" --repo "$GITHUB_REPOSITORY" --remove-label vote-passed || true ;;
+          esac
