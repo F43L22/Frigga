@@ -17,6 +17,7 @@ Nobody pushes to `main`. Everyone — Guardian included — goes through a pull 
 - **Checks run:** Thread files must have the required fields (see the template).
 - **If you're Urd** in that Knot, your PR is a **draft** until a Verdandi+ comments `/sponsor`.
 - **Vote + Frigga's advice.** When the vote passes, the PR gets the `vote-passed` label and Frigga merges it.
+- **Pushing new commits after a vote removes `vote-passed`.** The vote is for what was shown; changes need a new one.
 
 Your merged commits are your **Strands**: they're your credit, your standing, and later your share.
 

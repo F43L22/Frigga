@@ -26,9 +26,15 @@ jobs:
           COMMENTER: ${{ github.event.comment.user.login }}
           PR_AUTHOR: ${{ github.event.issue.user.login }}
         run: python .github/scripts/frigga.py sponsor "$RUNNER_TEMP/changed.txt"
-      - name: Label it
+      - name: Frigga's token
+        id: frigga
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.FRIGGA_APP_ID }}
+          private-key: ${{ secrets.FRIGGA_PRIVATE_KEY }}
+      - name: Label it (as Frigga, so the vote check re-runs)
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.frigga.outputs.token }}
         run: |
           gh label create sponsored --color 2da44e --description "Sponsored by a Verdandi+" --repo ${{ github.repository }} 2>/dev/null || true
           gh pr edit ${{ github.event.issue.number }} --repo ${{ github.repository }} --add-label sponsored
