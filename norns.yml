@@ -1,0 +1,11 @@
+# Ranks per Knot, by GitHub username.
+# Anyone not listed in a Knot is Urd there.
+# Changed only by vote. Frigga always reads this file from main, never from a pull request.
+
+wyrd:
+  skuld: [F43L22]    # origin seat: the Idea of Wyrd
+  verdandi: []
+
+reverse-engineered-library:
+  skuld: [F43L22]    # origin seat
+  verdandi: []

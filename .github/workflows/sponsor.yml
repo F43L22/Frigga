@@ -1,0 +1,34 @@
+name: sponsor
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  sponsor:
+    if: github.event.issue.pull_request && startsWith(github.event.comment.body, '/sponsor')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rules and ranks from main (never from the PR)
+        uses: actions/checkout@v4
+      - run: pip install pyyaml
+      - name: Changed files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr diff ${{ github.event.issue.number }} --repo ${{ github.repository }} --name-only > "$RUNNER_TEMP/changed.txt"
+      - name: Commenter is Verdandi+ in every touched Knot
+        env:
+          COMMENTER: ${{ github.event.comment.user.login }}
+          PR_AUTHOR: ${{ github.event.issue.user.login }}
+        run: python .github/scripts/frigga.py sponsor "$RUNNER_TEMP/changed.txt"
+      - name: Label it
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create sponsored --color 2da44e --description "Sponsored by a Verdandi+" --repo ${{ github.repository }} 2>/dev/null || true
+          gh pr edit ${{ github.event.issue.number }} --repo ${{ github.repository }} --add-label sponsored

@@ -1,0 +1,48 @@
+name: frigga
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  threads:
+    name: threads
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rules from main
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+          path: base
+      - name: The proposal
+        uses: actions/checkout@v4
+        with:
+          path: pr
+      - run: pip install pyyaml
+      - run: python base/.github/scripts/frigga.py validate pr
+
+  frigga-vote:
+    name: frigga-vote
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rules and ranks from main (never from the PR)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+      - run: pip install pyyaml
+      - name: Changed files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr diff ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --name-only > "$RUNNER_TEMP/changed.txt"
+      - name: Sponsored (if Urd) and vote passed
+        env:
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: python .github/scripts/frigga.py gate "$RUNNER_TEMP/changed.txt"
+
+  # Next: Frigga's advice — Jev checks (duplicate, legal risk, spam) + Claude's
+  # public review comment. Needs the Frigga GitHub App and API keys as secrets.
